@@ -30,5 +30,10 @@ func probeEmptyPorts(ctx context.Context, ch chan int) {
 			case ch <- p:
 			}
 		}
+
+		select {
+		case <-ctx.Done():
+			return
+		}
 	}
 }
