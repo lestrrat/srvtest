@@ -3,9 +3,7 @@ package srvtest_test
 import (
 	"context"
 	"fmt"
-	"net"
 	"os/exec"
-	"strconv"
 	"testing"
 	"time"
 
@@ -63,14 +61,14 @@ func TestWaitPort(t *testing.T) {
 
 	port := srvtest.EmptyPort(ctx)
 
-	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	l, err := srvtest.ListenPort(port)
 	if !assert.NoError(t, err, `should succeed listening to port`) {
 		return
 	}
 
 	// listening again to this port should fail
 	var oldL = l
-	l, err = net.Listen("tcp", ":"+strconv.Itoa(port))
+	l, err = srvtest.ListenPort(port)
 	if !assert.Error(t, err, `should fail listening to same port`) {
 		return
 	}
@@ -86,7 +84,7 @@ func TestWaitPort(t *testing.T) {
 	for l == nil {
 		select {
 		case <-tick.C:
-			l, err = net.Listen("tcp", ":"+strconv.Itoa(port))
+			l, err = srvtest.ListenPort(port)
 			if err != nil {
 				t.Logf("failed to listen")
 			}

@@ -15,6 +15,23 @@ const (
 	DefaultMaxPortNumber = 60000
 )
 
+// ListenPort is a utility function to an integer port number
+func ListenPort(p int) (net.Listener, error) {
+	return net.Listen("tcp", ":" + strconv.Itoa(p))
+}
+
+// ListenPort is a utility function to an integer port number from
+// a IPv4 network
+func ListenPortV4(p int) (net.Listener, error) {
+	return net.Listen("tcp4", ":" + strconv.Itoa(p))
+}
+
+// ListenPort is a utility function to an integer port number from
+// a IPv6 network
+func ListenPortV6(p int) (net.Listener, error) {
+	return net.Listen("tcp6", "[::]:" + strconv.Itoa(p))
+}
+
 // Returns "empty", i.e. available ports that you can listen to.
 // EmptyPort returns only one port number. This suits most casual
 // needs, but if you *reall* must grab a port, you might want to
@@ -68,7 +85,7 @@ func probeEmptyPorts(ctx context.Context, ch chan int, lo, hi, v int) {
 	defer close(ch)
 
 	for p := lo + rand.Intn(v); p < hi; p++ {
-		l, e := net.Listen("tcp", ":"+strconv.Itoa(p))
+		l, e := ListenPort(p)
 		if e == nil {
 			// yay!
 			l.Close()
@@ -92,7 +109,7 @@ func probeEmptyPorts(ctx context.Context, ch chan int, lo, hi, v int) {
 // Waits for the specified port to be available.
 func WaitPort(ctx context.Context, port int) error {
 	for {
-		l, e := net.Listen("tcp", ":"+strconv.Itoa(port))
+		l, e := ListenPort(port)
 		if e == nil {
 			l.Close()
 			return nil
