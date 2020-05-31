@@ -16,11 +16,12 @@ func ExampleEmptyPorts() {
 	defer cancel()
 
 	var cmd *exec.Cmd
-	for port := range srvtest.EmptyPorts(ctx) {
+	var port int
+	for port = range srvtest.EmptyPorts(ctx) {
 		// port *should* be empty, at least when EmptyPorts() was
 		// probing it. If you failed to listen to it, then use the
 		// next one that is returned by EmptyPorts()
-		cmd = exec.CommandContext(ctx, "memcached", "-p", fmt.Sprintf("%d", port))
+		cmd = exec.CommandContext(ctx, "memcached", "-vvv", "-p", fmt.Sprintf("%d", port))
 		go cmd.Run()
 		break
 	}
@@ -29,6 +30,23 @@ func ExampleEmptyPorts() {
 		fmt.Println("cmd is nil (FAIL)")
 		return
 	}
+
+	tick := time.NewTicker(500 * time.Millisecond)
+	for connecting := true; connecting; {
+		select {
+		case <-ctx.Done():
+			fmt.Printf("failed to connect to port %d\n", port)
+		case <-tick.C:
+			_, err := srvtest.DialPort(ctx, port)
+			if err == nil {
+				connecting = false
+				break
+			}
+			fmt.Println(err)
+		}
+	}
+
+	cmd.Process.Kill()
 
 	cmd.Wait()
 	fmt.Println("done")

@@ -4,6 +4,7 @@ package srvtest
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
@@ -15,21 +16,41 @@ const (
 	DefaultMaxPortNumber = 60000
 )
 
+func tcpAddr(p int) string {
+	return ":" + strconv.Itoa(p)
+}
+
+func tcp6Addr(p int) string {
+	return "[::]:" + strconv.Itoa(p)
+}
+
+func DialPort(ctx context.Context, port int) (net.Conn, error) {
+	return (&net.Dialer{}).DialContext(ctx, "tcp", tcpAddr(port))
+}
+
+func DialPortV4(ctx context.Context, port int) (net.Conn, error) {
+	return (&net.Dialer{}).DialContext(ctx, "tcp4", tcpAddr(port))
+}
+
+func DialPortV6(ctx context.Context, port int) (net.Conn, error) {
+	return (&net.Dialer{}).DialContext(ctx, "tcp6", tcp6Addr(port))
+}
+
 // ListenPort is a utility function to an integer port number
 func ListenPort(p int) (net.Listener, error) {
-	return net.Listen("tcp", ":" + strconv.Itoa(p))
+	return net.Listen("tcp", tcpAddr(p))
 }
 
 // ListenPort is a utility function to an integer port number from
 // a IPv4 network
 func ListenPortV4(p int) (net.Listener, error) {
-	return net.Listen("tcp4", ":" + strconv.Itoa(p))
+	return net.Listen("tcp4", tcpAddr(p))
 }
 
 // ListenPort is a utility function to an integer port number from
 // a IPv6 network
 func ListenPortV6(p int) (net.Listener, error) {
-	return net.Listen("tcp6", "[::]:" + strconv.Itoa(p))
+	return net.Listen("tcp6", tcp6Addr(p))
 }
 
 // Returns "empty", i.e. available ports that you can listen to.
